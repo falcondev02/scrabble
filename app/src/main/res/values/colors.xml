@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="colorDL">#A5D6A7</color> <!-- Зеленый (Double Letter) -->
+    <color name="colorDW">#FFF59D</color> <!-- Желтый (Double Word) -->
+    <color name="colorTW">#EF9A9A</color> <!-- Красный (Triple Word) -->
+    <color name="colorTL">#FFFFFFFF</color> <!-- Красный (Triple Word) -->
+    <color name="colorDefault">#FF000000</color> <!-- Белый (по умолчанию) -->
+</resources>

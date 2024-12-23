@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/main_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="8dp">
+
+    <!-- Заголовок / Логотип -->
+    <TextView
+        android:id="@+id/tvLogo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="SCRABBLE VS AI"
+        android:textSize="24sp"
+        android:gravity="center"
+        android:padding="8dp" />
+
+    <!-- Контейнер для SCORE 1 и SCORE 2 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="4dp">
+
+        <!-- SCORE 1 (Человек) -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="start">
+
+            <TextView
+                android:id="@+id/tvPlayer1Label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="SCORE (You)" />
+
+            <TextView
+                android:id="@+id/tvScorePlayer1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0"
+                android:textSize="16sp" />
+        </LinearLayout>
+
+        <!-- SCORE 2 (AI) -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="end">
+
+            <TextView
+                android:id="@+id/tvPlayer2Label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="SCORE (AI)" />
+
+            <TextView
+                android:id="@+id/tvScorePlayer2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0"
+                android:textSize="16sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Отображение, чей сейчас ход -->
+    <TextView
+        android:id="@+id/tvCurrentTurn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="PLAYER 1's MOVE"
+        android:gravity="center"
+        android:textSize="18sp"
+        android:padding="8dp" />
+
+    <!-- Сетка 15x15 для доски -->
+    <GridLayout
+        android:id="@+id/boardGrid"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:columnCount="15"
+        android:rowCount="15"
+        android:padding="2dp"
+        android:useDefaultMargins="true"/>
+
+    <!-- Кнопки управления -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="4dp">
+
+        <Button
+            android:id="@+id/btnShuffle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="SHUFFLE" />
+
+        <Button
+            android:id="@+id/btnUndo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="UNDO" />
+
+        <Button
+            android:id="@+id/btnSubmit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="SUBMIT" />
+
+        <Button
+            android:id="@+id/btnSkipTurn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="SKIP" />
+
+        <Button
+            android:id="@+id/btnHelp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Help" />
+    </LinearLayout>
+
+    <!-- Стойка игрока (человека) -->
+    <TextView
+        android:id="@+id/tvRack1Label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Your Rack"
+        android:paddingTop="4dp"
+        android:paddingBottom="2dp" />
+
+    <LinearLayout
+        android:id="@+id/rackLayoutPlayer1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:layout_marginTop="4dp">
+    </LinearLayout>
+
+    <!-- Стойку AI можно не отображать (чтоб не видеть буквы компьютера),
+         но при желании можно сделать отдельный блок.
+         Ниже пример, если захотите показать: -->
+
+    <!--
+    <TextView
+        android:id="@+id/tvRack2Label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="AI Rack"
+        android:paddingTop="8dp"
+        android:paddingBottom="2dp" />
+
+    <LinearLayout
+        android:id="@+id/rackLayoutPlayer2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:layout_marginTop="4dp"/>
+    -->
+
+</LinearLayout>
