@@ -2,7 +2,6 @@
 [Скачать приложение](./app/release/app-release.apk)
 
 ## Демонстрация
-<video src="./media/scrabble.mp4" controls="controls" style="max-width: 100%;">
-    Ваш браузер не поддерживает видео.
-</video>
+
+https://github.com/user-attachments/assets/50e2603e-0e9a-409e-a7c0-afa142d2c472
 
