@@ -1,6 +1,8 @@
 package edu.susu.scrabble;
 
 import android.annotation.SuppressLint;
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.GridLayout;
@@ -118,6 +120,8 @@ public class SinglePlayerGameActivity extends AppCompatActivity {
                 // Если есть бонус, показываем
                 if (cell.getBonus() != null) {
                     button.setText(cell.getBonus());
+                    button.setTextColor(Color.parseColor("#424242")); // Тёмный цвет текста
+                    button.setTypeface(button.getTypeface(), Typeface.ITALIC); // Курсив
                 }
 
                 button.setOnClickListener(v -> {
@@ -130,6 +134,7 @@ public class SinglePlayerGameActivity extends AppCompatActivity {
                                         cell.setTile(Bag.swappedBlankTile);
                                         button.setText(Bag.swappedBlankTile.getLetter());
                                         button.setTextColor(getResources().getColor(R.color.black));
+                                        button.setTypeface(button.getTypeface(), Typeface.BOLD);
 
                                         engine.rackTileSelected = null;
                                         engine.recentlyPlayedCellStack.push(cell);
@@ -140,6 +145,7 @@ public class SinglePlayerGameActivity extends AppCompatActivity {
                             cell.setTile(engine.rackTileSelected);
                             button.setText(engine.rackTileSelected.getLetter());
                             button.setTextColor(getResources().getColor(R.color.black));
+                            button.setTypeface(button.getTypeface(), Typeface.BOLD);
 
                             engine.rackTileSelected = null;
                             engine.recentlyPlayedCellStack.push(cell);
@@ -197,9 +203,18 @@ public class SinglePlayerGameActivity extends AppCompatActivity {
                 if (cell.getTile() != null) {
                     cellButton.setText(cell.getTile().getLetter());
                     cellButton.setTextColor(getResources().getColor(R.color.black));
+                    cellButton.setTypeface(null, Typeface.BOLD); // Жирный шрифт для буквы
+
                 } else {
-                    cellButton.setText(cell.getBonus() != null ? cell.getBonus() : "");
-                    cellButton.setBackgroundColor(board.getCellColor(cell));
+                    // Если клетка пустая, восстанавливаем стиль бонуса
+                    if (cell.getBonus() != null) {
+                        cellButton.setText(cell.getBonus());
+                        cellButton.setTextColor(Color.parseColor("#424242")); // Тёмный цвет текста бонуса
+                        cellButton.setTypeface(null, Typeface.ITALIC); // Курсив для бонусной клетки
+                    } else {
+                        cellButton.setText(""); // Обычная пустая клетка
+                    }
+                    cellButton.setBackgroundColor(board.getCellColor(cell)); // Цвет клетки
                 }
             }
         }

@@ -1,6 +1,8 @@
 package edu.susu.scrabble;
 
 import android.app.AlertDialog;
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.GridLayout;
@@ -9,11 +11,6 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.util.ArrayList;
-
-/**
- * Игра против компьютера. Использует activity_game_ai.xml
- */
 public class AIGameActivity extends AppCompatActivity {
 
     // UI элементы
@@ -44,23 +41,21 @@ public class AIGameActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_game_ai);  // <-- наш новый макет
+        setContentView(R.layout.activity_game_ai);
 
         // 1) Найти все View-элементы
-        boardGrid = findViewById(R.id.boardGrid);
-        tvScorePlayer1 = findViewById(R.id.tvScorePlayer1);
-        tvScorePlayer2 = findViewById(R.id.tvScorePlayer2);
-        tvCurrentTurn  = findViewById(R.id.tvCurrentTurn);
+        boardGrid       = findViewById(R.id.boardGrid);
+        tvScorePlayer1  = findViewById(R.id.tvScorePlayer1);
+        tvScorePlayer2  = findViewById(R.id.tvScorePlayer2);
+        tvCurrentTurn   = findViewById(R.id.tvCurrentTurn);
 
-        btnShuffle   = findViewById(R.id.btnShuffle);
-        btnUndo      = findViewById(R.id.btnUndo);
-        btnSubmit    = findViewById(R.id.btnSubmit);
-        btnHelp      = findViewById(R.id.btnHelp);
-        btnSkipTurn  = findViewById(R.id.btnSkipTurn);
+        btnShuffle  = findViewById(R.id.btnShuffle);
+        btnUndo     = findViewById(R.id.btnUndo);
+        btnSubmit   = findViewById(R.id.btnSubmit);
+        btnHelp     = findViewById(R.id.btnHelp);
+        btnSkipTurn = findViewById(R.id.btnSkipTurn);
 
         rackLayoutPlayer1 = findViewById(R.id.rackLayoutPlayer1);
-        // Если хотите отобразить стойку AI, найдите rackLayoutPlayer2:
-        // rackLayoutPlayer2 = findViewById(R.id.rackLayoutPlayer2);
 
         // 2) Создаём Board, Bag, двух игроков
         board = new Board();
@@ -113,8 +108,6 @@ public class AIGameActivity extends AppCompatActivity {
                     updateScores();
                     fillRackForPlayer(humanPlayer);
                     switchToAI();  // Передаём ход AI
-                } else {
-                    // ход невалиден — ничего не меняем
                 }
                 updateBoardGUI();
                 updateRackGUI();
@@ -122,9 +115,15 @@ public class AIGameActivity extends AppCompatActivity {
         });
 
         btnSkipTurn.setOnClickListener(v -> {
-            // Если человек пропускает, просто ход переходит к AI
             if (currentPlayer == humanPlayer) {
-                switchToAI();
+                // Если человек пропускает, но ещё не было первого хода (engine.initialMove),
+                // значит пусть AI сделает свой ход первым.
+                if (engine.initialMove) {
+                    switchToAI();
+                } else {
+                    // Обычное переключение хода
+                    switchToAI();
+                }
             } else {
                 // Если AI пропускает (редко), вернём ход человеку
                 switchToHuman();
@@ -167,6 +166,8 @@ public class AIGameActivity extends AppCompatActivity {
 
                 if (cell.getBonus() != null) {
                     btn.setText(cell.getBonus());
+                    btn.setTextColor(Color.parseColor("#424242")); // Тёмный цвет текста
+                    btn.setTypeface(btn.getTypeface(), Typeface.ITALIC); // Курсив
                 }
 
                 // Сохраняем ссылку
@@ -188,6 +189,8 @@ public class AIGameActivity extends AppCompatActivity {
                                             cell.setTile(Bag.swappedBlankTile);
                                             btn.setText(Bag.swappedBlankTile.getLetter());
                                             btn.setTextColor(getResources().getColor(R.color.black));
+                                            btn.setTypeface(btn.getTypeface(), Typeface.BOLD);
+
                                             engine.rackTileSelected = null;
                                             engine.recentlyPlayedCellStack.push(cell);
                                         });
@@ -196,6 +199,8 @@ public class AIGameActivity extends AppCompatActivity {
                                 cell.setTile(engine.rackTileSelected);
                                 btn.setText(engine.rackTileSelected.getLetter());
                                 btn.setTextColor(getResources().getColor(R.color.black));
+                                btn.setTypeface(btn.getTypeface(), Typeface.BOLD);
+
                                 engine.rackTileSelected = null;
                                 engine.recentlyPlayedCellStack.push(cell);
                             }
@@ -247,10 +252,17 @@ public class AIGameActivity extends AppCompatActivity {
                 if (cell.getTile() != null) {
                     btn.setText(cell.getTile().getLetter());
                     btn.setTextColor(getResources().getColor(R.color.black));
+                    btn.setTypeface(null, Typeface.BOLD); // Жирный шрифт для буквы
                 } else {
-                    // Пустая ячейка => показываем либо бонус, либо пусто
-                    btn.setText(cell.getBonus() != null ? cell.getBonus() : "");
-                    btn.setBackgroundColor(board.getCellColor(cell));
+                    // Если клетка пустая, восстанавливаем стиль бонуса
+                    if (cell.getBonus() != null) {
+                        btn.setText(cell.getBonus());
+                        btn.setTextColor(Color.parseColor("#424242")); // Тёмный цвет текста бонуса
+                        btn.setTypeface(null, Typeface.ITALIC); // Курсив для бонусной клетки
+                    } else {
+                        btn.setText(""); // Обычная пустая клетка
+                    }
+                    btn.setBackgroundColor(board.getCellColor(cell)); // Цвет клетки
                 }
             }
         }
@@ -295,11 +307,17 @@ public class AIGameActivity extends AppCompatActivity {
     // Логика хода AI
     private void doAIturn() {
         // Ищем лучшее слово
-        AIPlayer.BestMove bestMove = aiPlayer.findBestMove(board, engine,
-                DictionaryManager.getInstance(this).getDictionary());
+        AIPlayer.BestMove bestMove = aiPlayer.findBestMove(
+                board, engine, DictionaryManager.getInstance(this).getDictionary()
+        );
 
+        // Если ничего не нашёл — пропускаем
         if (bestMove == null) {
-            // AI пропускает, если не находит хода
+            return;
+        }
+
+        // Если результат 0, значит невыгодно/невалидно — пропускаем
+        if (bestMove.score <= 0) {
             return;
         }
 
@@ -315,7 +333,11 @@ public class AIGameActivity extends AppCompatActivity {
         }
     }
 
-    // Ставим слово (horizontal/vertical) на доску
+    /**
+     * Ставим слово (horizontal/vertical) на доску.
+     * ВАЖНО: убираем использованные буквы из стойки AI, чтобы потом
+     * он мог добрать новые из мешка.
+     */
     private void placeBestMoveOnBoard(AIPlayer.BestMove move) {
         engine.recentlyPlayedCellStack.clear();
         engine.recentlyPlayedTileStack.clear();
@@ -323,21 +345,39 @@ public class AIGameActivity extends AppCompatActivity {
         if (move.isHorizontal) {
             for (int i = 0; i < move.word.length(); i++) {
                 Cell c = board.cellMatrix[move.startRow][move.startCol + i];
+                // Если здесь не было буквы, берём её из стойки AI
                 if (c.getTile() == null) {
-                    Tile t = new Tile(String.valueOf(move.word.charAt(i)), 1);
-                    c.setTile(t);
+                    char needed = move.word.charAt(i);
+                    // Ищем эту букву в стойке AI (учтём регистр)
+                    int rackIndex = aiPlayer.findTileInRack(needed);
+                    Tile tileFromRack;
+                    if (rackIndex >= 0) {
+                        tileFromRack = aiPlayer.getAndRemoveFromRackAt(rackIndex);
+                    } else {
+                        // Не нашли в стойке, возможно буква уже лежит на доске, или blank.
+                        // Для упрощения, если не нашли — создаём новую
+                        tileFromRack = new Tile(String.valueOf(needed), 1);
+                    }
+                    c.setTile(tileFromRack);
                     engine.recentlyPlayedCellStack.push(c);
-                    engine.recentlyPlayedTileStack.push(t);
+                    engine.recentlyPlayedTileStack.push(tileFromRack);
                 }
             }
         } else {
             for (int i = 0; i < move.word.length(); i++) {
                 Cell c = board.cellMatrix[move.startRow + i][move.startCol];
                 if (c.getTile() == null) {
-                    Tile t = new Tile(String.valueOf(move.word.charAt(i)), 1);
-                    c.setTile(t);
+                    char needed = move.word.charAt(i);
+                    int rackIndex = aiPlayer.findTileInRack(needed);
+                    Tile tileFromRack;
+                    if (rackIndex >= 0) {
+                        tileFromRack = aiPlayer.getAndRemoveFromRackAt(rackIndex);
+                    } else {
+                        tileFromRack = new Tile(String.valueOf(needed), 1);
+                    }
+                    c.setTile(tileFromRack);
                     engine.recentlyPlayedCellStack.push(c);
-                    engine.recentlyPlayedTileStack.push(t);
+                    engine.recentlyPlayedTileStack.push(tileFromRack);
                 }
             }
         }

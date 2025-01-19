@@ -1,17 +1,15 @@
 package edu.susu.scrabble;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class AIPlayer extends Player {
+
+    private static final Set<String> usedWords = new HashSet<>();
 
     public AIPlayer() {
         super();
     }
 
-    /**
-     * Описание лучшего хода
-     */
     public static class BestMove {
         public String word;
         public int startRow;
@@ -21,47 +19,65 @@ public class AIPlayer extends Player {
     }
 
     /**
-     * Главный метод: пытается найти лучший ход
+     * Главный метод: находим лучший ход среди всех слов,
+     * которые можно составить из букв на стойке.
+     * Для первого хода (engine.initialMove), старайся покрыть клетку (7,7).
      */
     public BestMove findBestMove(Board board, Engine engine, Dictionary dictionary) {
-        // 1) Собрать все слова из rack
+
         List<String> allWords = generatePossibleWords(dictionary);
         if (allWords.isEmpty()) {
-            return null; // Нечего ставить
+            return null;
         }
 
         BestMove best = null;
         int bestScore = 0;
 
-        // 2) Для каждого слова найти варианты размещения
+        // Множество «якорных» клеток - все пустые, но рядом с занятыми (включая диагонали)
+        Set<Cell> anchorCells = findAnchorCells(board);
+
         for (String word : allWords) {
-            // Горизонтально
-            BestMove bmH = findHorizontalPlacement(word, board, engine, dictionary);
+
+            // Чтобы не повторять одно и то же слово
+            if (usedWords.contains(word)) {
+                continue;
+            }
+
+            // Горизонтальное
+            BestMove bmH = tryHorizontalPlacement(word, board, engine, anchorCells);
             if (bmH != null && bmH.score > bestScore) {
                 bestScore = bmH.score;
                 best = bmH;
             }
 
-            // Вертикально
-            BestMove bmV = findVerticalPlacement(word, board, engine, dictionary);
+            // Вертикальное
+            BestMove bmV = tryVerticalPlacement(word, board, engine, anchorCells);
             if (bmV != null && bmV.score > bestScore) {
                 bestScore = bmV.score;
                 best = bmV;
             }
         }
+
+        if (best != null && best.score > 0) {
+            usedWords.add(best.word);
+        }
+
         return best;
     }
 
-    // Генерация слов из букв стойки (упрощённо, brute force)
+    /**
+     * Метод для генерации слов из букв на стойке.
+     * (упрощённо: все перестановки + подстроки, которые есть в словаре)
+     */
     private List<String> generatePossibleWords(Dictionary dictionary) {
         List<String> result = new ArrayList<>();
-        String rackLetters = getRackLetters(); // Все буквы на стойке
+        String rackLetters = getRackLetters();
+
         List<String> perms = new ArrayList<>();
         permutationsOf(rackLetters, "", perms);
 
-        // Проверяем в словаре все префиксы
         for (String p : perms) {
-            for (int end = 1; end <= p.length(); end++) {
+            for (int end = 2; end <= p.length(); end++) {
                 String cand = p.substring(0, end).toLowerCase();
                 if (dictionary.verifyWord(cand) && !result.contains(cand)) {
                     result.add(cand);
@@ -81,7 +97,6 @@ public class AIPlayer extends Player {
         return sb.toString();
     }
 
-    // Рекурсивная генерация перестановок
     private void permutationsOf(String remaining, String prefix, List<String> out) {
         if (remaining.length() == 0) {
             out.add(prefix);
@@ -93,24 +108,49 @@ public class AIPlayer extends Player {
         }
     }
 
-    private BestMove findHorizontalPlacement(String word, Board board, Engine engine, Dictionary dict) {
-        int maxScore = -1;
+    /**
+     * Проверяем горизонтальные варианты
+     */
+    private BestMove tryHorizontalPlacement(String word, Board board, Engine engine, Set<Cell> anchorCells) {
+        int maxScore = 0;
         BestMove best = null;
+
+        // Если это первый ход, нужно, чтобы слово покрывало (7,7)
+        boolean mustCoverCenter = engine.initialMove;
 
         for (int row = 0; row < 15; row++) {
             for (int colStart = 0; colStart < 15; colStart++) {
-                if (colStart + word.length() > 15) break;
-                if (canPlaceHorizontal(row, colStart, word, board)) {
-                    int sc = simulateScore(word, row, colStart, true, engine);
-                    if (sc > maxScore) {
-                        maxScore = sc;
-                        best = new BestMove();
-                        best.word = word;
-                        best.startRow = row;
-                        best.startCol = colStart;
-                        best.isHorizontal = true;
-                        best.score = sc;
-                    }
+                int endCol = colStart + word.length() - 1;
+                if (endCol >= 15) break;
+
+                // Если это первый ход, проверяем, попадает ли (7,7) в интервал colStart..endCol при row=7
+                if (mustCoverCenter) {
+                    // Нужно row == 7 и 7 между colStart..endCol
+                    if (row != 7) continue;
+                    if (7 < colStart || 7 > endCol) continue;
+                }
+
+                // Проверяем, можно ли наложить слово
+                if (!canPlaceHorizontal(row, colStart, word, board)) {
+                    continue;
+                }
+                // Проверяем якорные клетки (касается ли уже занятых)
+                if (!touchesAnyAnchorHorizontal(row, colStart, word.length(), board, anchorCells)
+                        && !mustCoverCenter) {
+                    // Если это не первый ход, нужно касаться уже выложенных букв
+                    continue;
+                }
+
+                int sc = simulateScore(word, row, colStart, true, engine);
+                if (sc > maxScore) {
+                    maxScore = sc;
+                    BestMove bm = new BestMove();
+                    bm.word = word;
+                    bm.startRow = row;
+                    bm.startCol = colStart;
+                    bm.isHorizontal = true;
+                    bm.score = sc;
+                    best = bm;
                 }
             }
         }
@@ -118,24 +158,45 @@ public class AIPlayer extends Player {
         return best;
     }
 
-    private BestMove findVerticalPlacement(String word, Board board, Engine engine, Dictionary dict) {
-        int maxScore = -1;
+    /**
+     * Проверяем вертикальные варианты
+     */
+    private BestMove tryVerticalPlacement(String word, Board board, Engine engine, Set<Cell> anchorCells) {
+        int maxScore = 0;
         BestMove best = null;
+
+        boolean mustCoverCenter = engine.initialMove;
 
         for (int col = 0; col < 15; col++) {
             for (int rowStart = 0; rowStart < 15; rowStart++) {
-                if (rowStart + word.length() > 15) break;
-                if (canPlaceVertical(rowStart, col, word, board)) {
-                    int sc = simulateScore(word, rowStart, col, false, engine);
-                    if (sc > maxScore) {
-                        maxScore = sc;
-                        best = new BestMove();
-                        best.word = word;
-                        best.startRow = rowStart;
-                        best.startCol = col;
-                        best.isHorizontal = false;
-                        best.score = sc;
-                    }
+                int endRow = rowStart + word.length() - 1;
+                if (endRow >= 15) break;
+
+                // Если это первый ход, проверяем, покрывает ли (7,7)
+                if (mustCoverCenter) {
+                    // нужно col == 7 и 7 между rowStart..endRow
+                    if (col != 7) continue;
+                    if (7 < rowStart || 7 > endRow) continue;
+                }
+
+                if (!canPlaceVertical(rowStart, col, word, board)) {
+                    continue;
+                }
+                if (!touchesAnyAnchorVertical(rowStart, col, word.length(), board, anchorCells)
+                        && !mustCoverCenter) {
+                    continue;
+                }
+
+                int sc = simulateScore(word, rowStart, col, false, engine);
+                if (sc > maxScore) {
+                    maxScore = sc;
+                    BestMove bm = new BestMove();
+                    bm.word = word;
+                    bm.startRow = rowStart;
+                    bm.startCol = col;
+                    bm.isHorizontal = false;
+                    bm.score = sc;
+                    best = bm;
                 }
             }
         }
@@ -143,13 +204,14 @@ public class AIPlayer extends Player {
         return best;
     }
 
-    // Проверяем, свободны ли нужные клетки (или совпадают по букве)
     private boolean canPlaceHorizontal(int row, int colStart, String word, Board board) {
         for (int i = 0; i < word.length(); i++) {
             Cell c = board.cellMatrix[row][colStart + i];
             if (c.getTile() != null) {
-                // Если занято, проверяем совпадение букв
-                if (!c.getTile().getLetter().equalsIgnoreCase(word.substring(i, i+1))) {
+                // Если занято - проверим совпадение
+                char existing = c.getTile().getLetter().charAt(0);
+                char needed = word.charAt(i);
+                if (Character.toLowerCase(existing) != Character.toLowerCase(needed)) {
                     return false;
                 }
             }
@@ -161,7 +223,9 @@ public class AIPlayer extends Player {
         for (int i = 0; i < word.length(); i++) {
             Cell c = board.cellMatrix[rowStart + i][col];
             if (c.getTile() != null) {
-                if (!c.getTile().getLetter().equalsIgnoreCase(word.substring(i, i+1))) {
+                char existing = c.getTile().getLetter().charAt(0);
+                char needed = word.charAt(i);
+                if (Character.toLowerCase(existing) != Character.toLowerCase(needed)) {
                     return false;
                 }
             }
@@ -169,25 +233,73 @@ public class AIPlayer extends Player {
         return true;
     }
 
-    // Временный расчёт очков (через движок)
+    private boolean touchesAnyAnchorHorizontal(int row, int colStart, int length,
+                                               Board board, Set<Cell> anchorCells) {
+        for (int i = 0; i < length; i++) {
+            Cell c = board.cellMatrix[row][colStart + i];
+            if (anchorCells.contains(c)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean touchesAnyAnchorVertical(int rowStart, int col, int length,
+                                             Board board, Set<Cell> anchorCells) {
+        for (int i = 0; i < length; i++) {
+            Cell c = board.cellMatrix[rowStart + i][col];
+            if (anchorCells.contains(c)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private Set<Cell> findAnchorCells(Board board) {
+        Set<Cell> anchors = new HashSet<>();
+        for (int r = 0; r < 15; r++) {
+            for (int c = 0; c < 15; c++) {
+                Cell cell = board.cellMatrix[r][c];
+                if (cell.getTile() != null) {
+                    // Смотрим всех соседей (8 направлений)
+                    for (int dr = -1; dr <= 1; dr++) {
+                        for (int dc = -1; dc <= 1; dc++) {
+                            if (dr == 0 && dc == 0) continue;
+                            int rr = r + dr;
+                            int cc = c + dc;
+                            if (rr >= 0 && rr < 15 && cc >= 0 && cc < 15) {
+                                Cell neighbor = board.cellMatrix[rr][cc];
+                                if (neighbor.getTile() == null) {
+                                    anchors.add(neighbor);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return anchors;
+    }
+
+    /**
+     * Временный расчёт очков: вызываем checkBoard() после «пробной» укладки.
+     * Если checkBoard()==false, значит 0 очков.
+     */
     private int simulateScore(String word, int row, int col, boolean horizontal, Engine engine) {
-        // Сохраняем старое состояние
         Player oldPlayer = engine.player;
         int oldScore = Integer.parseInt(this.getScore());
 
-        // Сбрасываем стеки
         engine.recentlyPlayedCellStack.clear();
         engine.recentlyPlayedTileStack.clear();
-        // Меняем player на AI
         engine.player = this;
 
-        // Временно ставим буквы
-        ArrayList<Cell> placedCells = new ArrayList<>();
+        List<Cell> placedCells = new ArrayList<>();
+
         if (horizontal) {
             for (int i = 0; i < word.length(); i++) {
                 Cell c = engine.board.cellMatrix[row][col + i];
                 if (c.getTile() == null) {
-                    Tile t = new Tile(word.substring(i, i+1), 1);
+                    Tile t = new Tile(String.valueOf(word.charAt(i)), 1);
                     c.setTile(t);
                     placedCells.add(c);
                     engine.recentlyPlayedCellStack.push(c);
@@ -198,7 +310,7 @@ public class AIPlayer extends Player {
             for (int i = 0; i < word.length(); i++) {
                 Cell c = engine.board.cellMatrix[row + i][col];
                 if (c.getTile() == null) {
-                    Tile t = new Tile(word.substring(i, i+1), 1);
+                    Tile t = new Tile(String.valueOf(word.charAt(i)), 1);
                     c.setTile(t);
                     placedCells.add(c);
                     engine.recentlyPlayedCellStack.push(c);
@@ -207,7 +319,6 @@ public class AIPlayer extends Player {
             }
         }
 
-        // Вызываем checkBoard() — если валиден, будет начисление очков
         boolean ok = engine.checkBoard();
         int gained = 0;
         if (ok) {
@@ -215,16 +326,28 @@ public class AIPlayer extends Player {
         }
 
         // Откат
-        // Убираем временные плитки
         for (Cell cell : placedCells) {
             cell.setTile(null);
         }
         engine.recentlyPlayedCellStack.clear();
         engine.recentlyPlayedTileStack.clear();
-
         this.setScore(oldScore);
         engine.player = oldPlayer;
 
         return gained;
+    }
+
+    /**
+     * Вспомогательный метод: найти индекс плитки c (буква) в rack
+     * (если в rack есть Tile с такой буквой).
+     */
+    public int findTileInRack(char letter) {
+        for (int i = 0; i < 7; i++) {
+            Tile t = getRack()[i];
+            if (t != null && Character.toUpperCase(t.getLetter().charAt(0)) == Character.toUpperCase(letter)) {
+                return i;
+            }
+        }
+        return -1;
     }
 }

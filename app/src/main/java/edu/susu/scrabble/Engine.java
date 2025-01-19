@@ -501,9 +501,38 @@ public class Engine {
 
 		return false;
 	}
+	public boolean verifyHorizontalWords() {
+		for (int row = 0; row < 15; row++) {
+			StringBuilder sb = new StringBuilder();
+			for (int col = 0; col < 15; col++) {
+				Cell cell = board.cellMatrix[row][col];
+				if (cell.getTile() != null) {
+					// добавляем букву к sb
+					sb.append(cell.getTile().getLetter());
+				} else {
+					// дошли до пустой клетки - проверяем, не получилась ли у нас подряд строка >=2 букв
+					if (sb.length() > 1) {
+						String word = sb.toString().toLowerCase();
+						if (!dict.verifyWord(word)) {
+							return false; // если такого слова нет в словаре, ход невалиден
+						}
+					}
+					sb.setLength(0); // сбрасываем
+				}
+			}
+			// в конце ряда проверяем, вдруг последнее слово тянулось до конца
+			if (sb.length() > 1) {
+				String word = sb.toString().toLowerCase();
+				if (!dict.verifyWord(word)) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
 
 	//Only check horizontally words on board if legal, despite being legally connected or not
-	public boolean verifyHorizontalWords()
+	/*public boolean verifyHorizontalWords()
 	{
 		StringBuilder sb = new StringBuilder();
 
@@ -542,7 +571,7 @@ public class Engine {
 			sb.setLength(0);
 		}
 		return true;
-	}
+	}*/
 
 	//Only check vertical words on board if legal, despite being legally connected or not
 	public boolean verifyVerticalWords()

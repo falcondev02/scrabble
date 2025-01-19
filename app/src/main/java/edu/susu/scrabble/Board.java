@@ -160,7 +160,9 @@ public class Board {
             case "TW":
                 return Color.parseColor("#EF9A9A");  // красный
             case "TL":
-                return Color.parseColor("#FFFFFFFF"); // Красный для Triple Word
+                return Color.parseColor("#ADD8E6"); // Светло-голубой для Triple Letter
+            case "X":
+                return Color.parseColor("#E57373");  // красный
             default:
                 return Color.WHITE; // Белый для остальных
         }

@@ -1,6 +1,8 @@
 package edu.susu.scrabble;
 
 import android.app.AlertDialog;
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.GridLayout;
@@ -168,6 +170,8 @@ public class GameActivity extends AppCompatActivity {
                 // Если есть бонус в Cell, показываем
                 if (cell.getBonus() != null) {
                     button.setText(cell.getBonus());
+                    button.setTextColor(Color.parseColor("#424242")); // Тёмный цвет текста
+                    button.setTypeface(button.getTypeface(), Typeface.ITALIC); // Курсив
                 }
 
                 button.setOnClickListener(v -> {
@@ -180,6 +184,7 @@ public class GameActivity extends AppCompatActivity {
                                 cell.setTile(Bag.swappedBlankTile);
                                 button.setText(Bag.swappedBlankTile.getLetter());
                                 button.setTextColor(getResources().getColor(R.color.black));
+                                button.setTypeface(button.getTypeface(), Typeface.BOLD);
 
                                 engine.rackTileSelected = null;
                                 engine.recentlyPlayedCellStack.push(cell);
@@ -190,6 +195,7 @@ public class GameActivity extends AppCompatActivity {
                             cell.setTile(engine.rackTileSelected);
                             button.setText(engine.rackTileSelected.getLetter());
                             button.setTextColor(getResources().getColor(R.color.black));
+                            button.setTypeface(button.getTypeface(), Typeface.BOLD);
 
                             engine.rackTileSelected = null;
                             engine.recentlyPlayedCellStack.push(cell);
@@ -277,9 +283,17 @@ public class GameActivity extends AppCompatActivity {
                 if (cell.getTile() != null) {
                     btn.setText(cell.getTile().getLetter());
                     btn.setTextColor(getResources().getColor(R.color.black));
+                    btn.setTypeface(null, Typeface.BOLD); // Жирный шрифт для буквы
                 } else {
-                    btn.setText(cell.getBonus() != null ? cell.getBonus() : "");
-                    btn.setBackgroundColor(board.getCellColor(cell));
+                    // Если клетка пустая, восстанавливаем стиль бонуса
+                    if (cell.getBonus() != null) {
+                        btn.setText(cell.getBonus());
+                        btn.setTextColor(Color.parseColor("#424242")); // Тёмный цвет текста бонуса
+                        btn.setTypeface(null, Typeface.ITALIC); // Курсив для бонусной клетки
+                    } else {
+                        btn.setText(""); // Обычная пустая клетка
+                    }
+                    btn.setBackgroundColor(board.getCellColor(cell)); // Цвет клетки
                 }
             }
         }

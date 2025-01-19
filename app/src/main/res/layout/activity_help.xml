@@ -2,23 +2,76 @@
 <ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:padding="16dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:orientation="vertical">
 
-        <!-- Картинка с очками для букв (можно хранить в drawable) -->
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+        <!-- Заголовок инструкции -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Help - How to play Scrabble"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:paddingBottom="16dp" />
 
+        <!-- Текст на английском языке -->
+        <TextView
+            android:id="@+id/tvHelpEnglish"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Rules of the game:\n\n"
+            android:textSize="16sp"
+            android:lineSpacingExtra="4dp" />
+
+        <TextView
+            android:id="@+id/tvHelpEnglishContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="1. The goal is to score points by placing tiles with letters on the board to form words.\n2. Special cells provide bonuses:\n   - DL: Double Letter score\n   - TL: Triple Letter score\n   - DW: Double Word score\n   - TW: Triple Word score\n3. Each player takes turns making moves.\n4. Words must connect to existing tiles on the board.\n5. The player with the highest score at the end of the game wins."
+            android:textSize="14sp"
+            android:lineSpacingExtra="4dp"
+            android:paddingBottom="16dp" />
+
+        <!-- Разделитель -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#CCCCCC"
+            android:paddingBottom="16dp" />
+
+        <!-- Текст на русском языке -->
+        <TextView
+            android:id="@+id/tvHelpRussian"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Правила игры:\n\n"
+            android:textSize="16sp"
+            android:lineSpacingExtra="4dp" />
+
+        <TextView
+            android:id="@+id/tvHelpRussianContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="1. Цель игры — набирать очки, размещая плитки с буквами на доске, чтобы составлять слова.\n2. Особые клетки дают бонусы:\n   - DL: двойные очки за букву\n   - TL: тройные очки за букву\n   - DW: двойные очки за слово\n   - TW: тройные очки за слово\n3. Игроки ходят по очереди.\n4. Все слова должны быть связаны с уже размещёнными на доске.\n5. Игрок с наибольшим количеством очков побеждает."
+            android:textSize="14sp"
+            android:lineSpacingExtra="4dp"
+            android:paddingBottom="16dp" />
+
+
+        <!-- Кнопка закрытия -->
         <Button
             android:id="@+id/btnClose"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Close"/>
+            android:text="Close"
+            android:textSize="16sp"
+            android:padding="8dp" />
+
     </LinearLayout>
 </ScrollView>
