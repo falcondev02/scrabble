@@ -3,5 +3,5 @@
 
 ## Демонстрация
 
-https://github.com/user-attachments/assets/50e2603e-0e9a-409e-a7c0-afa142d2c472
+https://github.com/user-attachments/assets/e48abfc5-5cc0-4a91-9e72-664e5275ad6b
 
